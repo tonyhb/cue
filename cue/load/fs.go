@@ -168,6 +168,21 @@ func hasSubdir(root, dir string) (rel string, ok bool) {
 func (fs *fileSystem) readDir(path string) ([]os.FileInfo, errors.Error) {
 	path = fs.makeAbs(path)
 	m := fs.getDir(path, false)
+
+	// You don't need to read the filesystem if things exist in overlay.
+	if m != nil {
+		items := make([]os.FileInfo, len(m))
+		i := 0
+		for _, of := range m {
+			items[i] = of
+			i++
+		}
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].Name() < items[j].Name()
+		})
+		return items, nil
+	}
+
 	items, err := ioutil.ReadDir(path)
 	if err != nil {
 		if !os.IsNotExist(err) || m == nil {

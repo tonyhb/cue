@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/cockroachdb/apd/v2"
@@ -380,6 +381,11 @@ func IsEllipsis(x ast.Decl) bool {
 
 // GenPath reports the directory in which to store generated files.
 func GenPath(root string) string {
+	if runtime.GOOS == "js" {
+		// JS has no os.Stat, etc.
+		return filepath.Join(root, "cue.mod", "gen")
+	}
+
 	info, err := os.Stat(filepath.Join(root, "cue.mod"))
 	if os.IsNotExist(err) || !info.IsDir() {
 		// Try legacy pkgDir mode
